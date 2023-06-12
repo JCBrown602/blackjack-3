@@ -148,6 +148,14 @@ const controller = {
     }
   },
 
+  placeBet: function (amount) {
+    model.playerCash -= amount;
+  },
+
+  calculatePayout: function (amount) {
+    model.playerCash += amount;
+  },
+
   checkGameStatus: function () {
     const playerScore = model.playerScore;
     const dealerScore = model.dealerScore;
@@ -155,18 +163,23 @@ const controller = {
     if (playerScore > 21) {
       view.displayMessage("Bust! You lose.");
       disableBtns();
+      this.calculatePayout(0); // Player loses the bet
     } else if (dealerScore > 21) {
       view.displayMessage("Dealer busts! You win.");
       disableBtns();
+      this.calculatePayout(amount * 2); // Player wins double the bet amount
     } else if (playerScore === 21 && dealerScore === 21) {
       view.displayMessage("It's a tie.");
       disableBtns();
+      this.calculatePayout(amount); // Player gets back the bet amount
     } else if (playerScore === 21) {
       view.displayMessage("Blackjack! You win.");
       disableBtns();
+      this.calculatePayout(amount * 2); // Player wins double the bet amount
     } else if (dealerScore === 21) {
       view.displayMessage("Dealer has blackjack. You lose.");
       disableBtns();
+      this.calculatePayout(0); // Player loses the bet
     }
     
     if (model.playerTurn === false) {
@@ -175,10 +188,13 @@ const controller = {
       if (playerScore >= 17 && dealerScore >= 17) {
         if (playerScore > dealerScore) {
           view.displayMessage("You win.");
+          this.calculatePayout(amount * 2); // Player wins double the bet amount
         } else if (playerScore < dealerScore) {
           view.displayMessage("Dealer wins.");
+          this.calculatePayout(0); // Player loses the bet
         } else {
           view.displayMessage("It's a tie.");
+          this.calculatePayout(amount); // Player gets back the bet amount
         }
       }
     }
@@ -240,4 +256,21 @@ document.getElementById("stand-button").addEventListener("click", function () {
   // document.getElementById("hit-button").disabled = true;
   // document.getElementById("stand-button").disabled = true;
   controller.dealerTurn();
+});
+
+// Bet buttons event listeners
+document.getElementById("bet-10").addEventListener("click", function () {
+  controller.placeBet(10);
+});
+
+document.getElementById("bet-50").addEventListener("click", function () {
+  controller.placeBet(50);
+});
+
+document.getElementById("bet-100").addEventListener("click", function () {
+  controller.placeBet(100);
+});
+
+document.getElementById("bet-500").addEventListener("click", function () {
+  controller.placeBet(500);
 });
