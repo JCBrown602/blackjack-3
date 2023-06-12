@@ -5,6 +5,7 @@ const model = {
   dealerHand: [],
   playerScore: 0,
   dealerScore: 0,
+  playerTurn: true,
 };
 
 // View
@@ -19,49 +20,56 @@ const view = {
     cardElement.className = "card";
     cardElement.textContent = card;
     document.getElementById(elementId).appendChild(cardElement);
-    if (card.includes("♥") || card.includes("♦")) {
-      cardElement.style.color = "red";
-      console.log("Hearts");
-    }
-    console.log(card);
   },
 
   clearTable: function () {
     const playerHandElement = document.getElementById("player-hand");
     const dealerHandElement = document.getElementById("dealer-hand");
-    const playerHandH2 = document.getElementById("player-h2");
-    const dealerHandH2 = document.getElementById("dealer-h2");
+    const playerScoreElement = document.getElementById("player-score");
+    const dealerScoreElement = document.getElementById("dealer-score");
+    const messageArea = document.getElementById("message-area");
     playerHandElement.innerHTML = "";
     dealerHandElement.innerHTML = "";
-    playerHandH2.innerHTML = "Player: ";
-    dealerHandH2.innerHTML = "Dealer: ";
+    playerScoreElement.textContent = "";
+    dealerScoreElement.textContent = "";
+    messageArea.textContent = "Welcome to Blackjack!";
   },
 
   updateScores: function (playerScore, dealerScore) {
-    const playerHandH2 = document.getElementById("player-h2");
-    const dealerHandH2 = document.getElementById("dealer-h2");
-    playerHandH2.textContent = `Player Hand: ${playerScore}`;
-    dealerHandH2.textContent = `Dealer Hand: ${dealerScore}`;
+    const playerScoreElement = document.getElementById("player-score");
+    const dealerScoreElement = document.getElementById("dealer-score");
+    playerScoreElement.textContent = `Player Score: ${playerScore}`;
+    dealerScoreElement.textContent = `Dealer Score: ${dealerScore}`;
   },
 };
 
 // Controller
 const controller = {
   startGame: function () {
+
+    enableBtns();
+
+    checkBtns("\tStart game");
+    model.playerTurn = true;
     model.deck = getShuffledDeck();
+    checkBtns("\t getShuffleDeck");
     model.playerHand = [drawCard(), drawCard()];
+    checkBtns("\t playerHand drawCard");
     model.dealerHand = [drawCard(), drawCard()];
+    checkBtns("\t dealerHand drawCard");
     model.playerScore = this.calculateHandScore(model.playerHand);
+    checkBtns("\t playerScore");
     model.dealerScore = this.calculateHandScore(model.dealerHand);
+    checkBtns("\t dealerScore");
 
     view.clearTable();
-    view.displayMessage("Welcome to Blackjack!");
+    checkBtns("\t clearTable");
     this.checkGameStatus();
+    checkBtns("\t checkGameStatus");
     this.displayHands();
-    this.calculateScores();
-
-    document.getElementById("hit-button").disabled = false;
-    document.getElementById("stand-button").disabled = false;
+    checkBtns("\t displayHands");
+    this.displayScores();
+    checkBtns("\t displayScores");
   },
 
   displayHands: function () {
@@ -77,12 +85,6 @@ const controller = {
     }
   },
 
-  calculateScores: function () {
-    const playerScore = this.calculateHandScore(model.playerHand);
-    const dealerScore = this.calculateHandScore(model.dealerHand);
-    view.updateScores(playerScore, dealerScore);
-  },
-
   displayScores: function () {
     const playerScore = model.playerScore;
     const dealerScore = model.dealerScore;
@@ -93,16 +95,8 @@ const controller = {
     let score = 0;
     let hasAce = false;
 
-    for (const theHand of Object.keys(hand)) {
-      const suit = hand[theHand];
-      console.log(theHand, suit);
-    }
-
-    console.log(`hand is: ${hand}, and typeOf: ${JSON.stringify(hand, null, 2)}`);
-    //const handStr = JSON.stringify(hand);
     for (let card of hand) {
-      console.log(`hand is: ${hand}, and typeOf: ${typeof(hand)}`);
-      const rank = hand.slice(0, -1);
+      const rank = card.slice(0, -1);
 
       if (rank === "A") {
         hasAce = true;
@@ -121,88 +115,89 @@ const controller = {
     return score;
   },
 
-  dealCardToPlayer: function (player) {
+  dealCardToPlayer: function () {
     const card = drawCard();
     model.playerHand.push(card);
-    const playerHandElement = document.getElementById("player-hand");
     view.renderCard(card, "player-hand");
     model.playerScore = this.calculateHandScore(model.playerHand);
     this.displayScores();
-
-    if (model.playerScore > 21) {
-      view.displayMessage("Bust! You lose.");
-      document.getElementById("hit-button").disabled = true;
-      document.getElementById("stand-button").disabled = true;
-      this.dealerTurn(player);
-    } else if (model.playerScore === 21) {
-      view.displayMessage("Blackjack! You win.");
-      document.getElementById("hit-button").disabled = true;
-      document.getElementById("stand-button").disabled = true;
-    }
-  },  
-  
-  dealerTurn: function (player) {
     this.checkGameStatus();
-    model.playerScore = this.calculateHandScore(model.playerHand);
-    model.dealerScore = this.calculateHandScore(model.dealerScore);
-    if (player.score > 21 && dealer.score <= 21) {
-      view.displayMessage("Bust! You lose. Dealer wins.");
-    }
+  },
+
+  dealerTurn: function () {
+    model.playerTurn = false;
     while (model.dealerScore < 17) {
       const card = drawCard();
       model.dealerHand.push(card);
       view.renderCard(card, "dealer-hand");
       model.dealerScore = this.calculateHandScore(model.dealerHand);
       this.displayScores();
+      this.checkGameStatus();
     }
 
     if (model.dealerScore > 21) {
       view.displayMessage("Dealer busts! You win.");
-      } else if (model.dealerScore >= 17 && model.dealerScore <= 21) {
-        if (model.dealerScore > model.playerScore) {
-          view.displayMessage("Dealer wins.");
-        } else if (model.dealerScore < model.playerScore) {
-          view.displayMessage("You win.");
-        } else {
-          view.displayMessage("It's a tie.");
-        }
-      } else if (model.dealerScore === 17) {
-        model.dealerScore = this.calculateHandScore(model.dealerHand);
-        this.displayScores();
-      }
+    } else if (model.dealerScore >= 17 && model.dealerScore <= 21) {
+      this.checkGameStatus();
+    }
   },
 
   checkGameStatus: function () {
     const playerScore = model.playerScore;
     const dealerScore = model.dealerScore;
-    document.getElementById("hit-button").disabled = true;
-    document.getElementById("stand-button").disabled = true;
 
     if (playerScore > 21) {
       view.displayMessage("Bust! You lose.");
-    } else if (dealerScore > 21 && playerScore <= 21) {
+      disableBtns();
+    } else if (dealerScore > 21) {
       view.displayMessage("Dealer busts! You win.");
+      disableBtns();
     } else if (playerScore === 21 && dealerScore === 21) {
       view.displayMessage("It's a tie.");
+      disableBtns();
     } else if (playerScore === 21) {
       view.displayMessage("Blackjack! You win.");
+      disableBtns();
     } else if (dealerScore === 21) {
       view.displayMessage("Dealer has blackjack. You lose.");
-    } else if (playerScore >= 17 && dealerScore >= 17) {
-      if (playerScore > dealerScore) {
-        view.displayMessage("You win.");
-      } else if (playerScore < dealerScore) {
-        view.displayMessage("Dealer wins.");
-      } else {
-        view.displayMessage("It's a tie.");
+      disableBtns();
+    }
+    
+    if (model.playerTurn === false) {
+      console.log("Toggle buttons true, disabled...");
+      disableBtns();
+      if (playerScore >= 17 && dealerScore >= 17) {
+        if (playerScore > dealerScore) {
+          view.displayMessage("You win.");
+        } else if (playerScore < dealerScore) {
+          view.displayMessage("Dealer wins.");
+        } else {
+          view.displayMessage("It's a tie.");
+        }
       }
     }
-    document.getElementById("hit-button").disabled = false;
-    document.getElementById("stand-button").disabled = false;
   },
 };
 
 // Helper functions
+function checkBtns(msg) {
+  let btn = document.getElementById("hit-button");
+  if (btn.disabled) {
+    console.log(`HIT BUTTON IS DISABLED! @${msg}`);
+  } else {
+    console.log(`hit button is NOT disabled! @${msg}`);
+  }
+}
+function disableBtns() {
+    document.getElementById("hit-button").disabled = true;
+    document.getElementById("stand-button").disabled = true;
+  } 
+  
+function enableBtns() {
+    document.getElementById("hit-button").disabled = false;
+    document.getElementById("stand-button").disabled = false;
+  }
+
 function getShuffledDeck() {
   const suits = ["♠", "♣", "♥", "♦"];
   const ranks = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
@@ -232,12 +227,11 @@ document.getElementById("start-button").addEventListener("click", function () {
 });
 
 document.getElementById("hit-button").addEventListener("click", function () {
-  controller.dealCardToPlayer(this.player);
+  controller.dealCardToPlayer();
 });
 
 document.getElementById("stand-button").addEventListener("click", function () {
-  console.log("> Stand Button <");
-  document.getElementById("hit-button").disabled = true;
-  document.getElementById("stand-button").disabled = true;
-  controller.dealerTurn(this.player);
+  // document.getElementById("hit-button").disabled = true;
+  // document.getElementById("stand-button").disabled = true;
+  controller.dealerTurn();
 });
