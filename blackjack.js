@@ -20,6 +20,10 @@ const view = {
     cardElement.className = "card";
     cardElement.textContent = card;
     document.getElementById(elementId).appendChild(cardElement);
+    if (card.includes("♥") || card.includes("♦")) {
+      cardElement.style.color = "red";
+      console.log("Hearts");
+    }
   },
 
   clearTable: function () {
@@ -138,6 +142,8 @@ const controller = {
     if (model.dealerScore > 21) {
       view.displayMessage("Dealer busts! You win.");
     } else if (model.dealerScore >= 17 && model.dealerScore <= 21) {
+      this.checkGameStatus();
+    } else if (model.dealerScore === 17) {
       this.checkGameStatus();
     }
   },
