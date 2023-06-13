@@ -7,6 +7,7 @@ const model = {
   dealerScore: 0,
   playerTurn: true,
   playerCash: 1000, // Initial amount to get started
+  playerBet: 0,
 };
 
 // View
@@ -23,7 +24,6 @@ const view = {
     document.getElementById(elementId).appendChild(cardElement);
     if (card.includes("♥") || card.includes("♦")) {
       cardElement.style.color = "red";
-      console.log("Hearts");
     }
   },
 
@@ -48,7 +48,8 @@ const view = {
 
     const playerH2Element = document.getElementById("player-h2");
     const dealerH2Element = document.getElementById("dealer-h2");
-    playerH2Element.textContent = `Player Hand: ${playerScore}, $${playerCash}`;
+    // const playerCashOnHand = playerCash;
+    playerH2Element.textContent = `Player Hand: ${playerScore}, $${JSON.stringify(playerCash)}`;
     dealerH2Element.textContent = `Dealer Hand: ${dealerScore}`;
   },
 };
@@ -59,27 +60,30 @@ const controller = {
 
     enableBtns();
 
-    checkBtns("\tStart game");
+    // console.log(playerCash);
+    // console.log(playerBet);
+
+    //checkBtns("\tStart game");
     model.playerTurn = true;
     model.deck = getShuffledDeck();
-    checkBtns("\t getShuffleDeck");
+    //checkBtns("\t getShuffleDeck");
     model.playerHand = [drawCard(), drawCard()];
-    checkBtns("\t playerHand drawCard");
+    //checkBtns("\t playerHand drawCard");
     model.dealerHand = [drawCard(), drawCard()];
-    checkBtns("\t dealerHand drawCard");
+    //checkBtns("\t dealerHand drawCard");
     model.playerScore = this.calculateHandScore(model.playerHand);
-    checkBtns("\t playerScore");
+    //checkBtns("\t playerScore");
     model.dealerScore = this.calculateHandScore(model.dealerHand);
-    checkBtns("\t dealerScore");
+    //checkBtns("\t dealerScore");
 
     view.clearTable();
-    checkBtns("\t clearTable");
+    //checkBtns("\t clearTable");
     this.checkGameStatus(model.playerCash);
-    checkBtns("\t checkGameStatus");
+    //checkBtns("\t checkGameStatus");
     this.displayHands();
-    checkBtns("\t displayHands");
+    //checkBtns("\t displayHands");
     this.displayScores();
-    checkBtns("\t displayScores");
+    //checkBtns("\t displayScores");
   },
 
   displayHands: function () {
@@ -157,10 +161,12 @@ const controller = {
 
   placeBet: function (amount) {
     model.playerCash -= amount;
+    model.playerBet = amount;
   },
 
   calculatePayout: function (amount) {
     model.playerCash += amount;
+    model.playerBet = 0;
   },
 
   checkGameStatus: function (amount) {
