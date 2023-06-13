@@ -28,15 +28,17 @@ const view = {
   },
 
   clearTable: function () {
+    const playerH2Element = document.getElementById("player-h2");
+    const playerCashElement = document.getElementById("player-cash");
+    const messageArea = document.getElementById("message-area");
     const playerHandElement = document.getElementById("player-hand");
     const dealerHandElement = document.getElementById("dealer-hand");
-    const playerScoreElement = document.getElementById("player-score");
-    const dealerScoreElement = document.getElementById("dealer-score");
-    const messageArea = document.getElementById("message-area");
-    playerHandElement.innerHTML = "";
-    dealerHandElement.innerHTML = "";
-    playerScoreElement.textContent = "";
-    dealerScoreElement.textContent = "";
+
+    playerH2Element.innerHTML = "Player Hand:";
+    playerCashElement.textContent = JSON.stringify(model.playerCash);
+    playerHandElement.textContent = "";
+    dealerHandElement.textContent = "";
+
     messageArea.textContent = "Welcome to Blackjack!";
   },
 
@@ -60,8 +62,7 @@ const controller = {
 
     enableBtns();
 
-    // console.log(playerCash);
-    // console.log(playerBet);
+    checkCash("startGame");
 
     //checkBtns("\tStart game");
     model.playerTurn = true;
@@ -147,14 +148,17 @@ const controller = {
       view.renderCard(card, "dealer-hand");
       model.dealerScore = this.calculateHandScore(model.dealerHand);
       this.displayScores();
+      checkCash("dealerTurn dealerScore < 17");
       this.checkGameStatus(model.playerCash);
     }
 
     if (model.dealerScore > 21) {
       view.displayMessage("Dealer busts! You win.");
     } else if (model.dealerScore >= 17 && model.dealerScore <= 21) {
+      checkCash("dealerTurn dealerScore > 21");
       this.checkGameStatus(model.playerCash);
     } else if (model.dealerScore === 17) {
+      checkCash("dealerTurn dealerScore === 17");
       this.checkGameStatus(model.playerCash);
     }
   },
@@ -166,12 +170,14 @@ const controller = {
 
   calculatePayout: function (amount) {
     model.playerCash += amount;
-    model.playerBet = 0;
+    // model.playerBet = 0;
   },
 
   checkGameStatus: function (amount) {
     const playerScore = model.playerScore;
     const dealerScore = model.dealerScore;
+
+    checkCash("CHECK GAME STATUS FUNCTION");
 
     if (playerScore > 21) {
       view.displayMessage("Bust! You lose.");
@@ -196,17 +202,20 @@ const controller = {
     }
     
     if (model.playerTurn === false) {
-      console.log("Toggle buttons true, disabled...");
+      // console.log("Toggle buttons true, disabled...");
       disableBtns();
-      if (playerScore >= 17 && dealerScore >= 17) {
+      if (dealerScore >= 17) {
         if (playerScore > dealerScore) {
           view.displayMessage("You win.");
+          checkCash("CheckGameStatus/playerturn === false, I win");
           this.calculatePayout(amount * 2); // Player wins double the bet amount
         } else if (playerScore < dealerScore) {
           view.displayMessage("Dealer wins.");
+          checkCash("CheckGameStatus/playerturn === false, dealer wins");
           this.calculatePayout(0); // Player loses the bet
         } else {
           view.displayMessage("It's a tie.");
+          checkCash("CheckGameStatus/playerturn === false, tie");
           this.calculatePayout(amount); // Player gets back the bet amount
         }
       }
@@ -223,6 +232,10 @@ function checkBtns(msg) {
     console.log(`hit button is NOT disabled! @${msg}`);
   }
 }
+function checkCash(msg) {
+  console.log(`Player cash is $${model.playerCash} in ${msg}`);
+}
+
 function disableBtns() {
     document.getElementById("hit-button").disabled = true;
     document.getElementById("stand-button").disabled = true;
