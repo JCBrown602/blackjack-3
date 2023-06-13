@@ -43,14 +43,9 @@ const view = {
   },
 
   updateScores: function (playerScore, dealerScore, playerCash) {
-    // const playerScoreElement = document.getElementById("player-score");
-    // const dealerScoreElement = document.getElementById("dealer-score");
-    // playerScoreElement.textContent = `Player Score: ${playerScore}`;
-    // dealerScoreElement.textContent = `Dealer Score: ${dealerScore}`;
-
     const playerH2Element = document.getElementById("player-h2");
     const dealerH2Element = document.getElementById("dealer-h2");
-    // const playerCashOnHand = playerCash;
+    
     playerH2Element.textContent = `Player Hand: ${playerScore}, $${JSON.stringify(playerCash)}`;
     dealerH2Element.textContent = `Dealer Hand: ${dealerScore}`;
   },
@@ -59,32 +54,23 @@ const view = {
 // Controller
 const controller = {
   startGame: function () {
-
+    console.clear();
     enableBtns();
 
     checkCash("startGame");
 
-    //checkBtns("\tStart game");
     model.playerTurn = true;
+    model.playerBet = 0;
     model.deck = getShuffledDeck();
-    //checkBtns("\t getShuffleDeck");
     model.playerHand = [drawCard(), drawCard()];
-    //checkBtns("\t playerHand drawCard");
     model.dealerHand = [drawCard(), drawCard()];
-    //checkBtns("\t dealerHand drawCard");
     model.playerScore = this.calculateHandScore(model.playerHand);
-    //checkBtns("\t playerScore");
     model.dealerScore = this.calculateHandScore(model.dealerHand);
-    //checkBtns("\t dealerScore");
 
     view.clearTable();
-    //checkBtns("\t clearTable");
-    this.checkGameStatus(model.playerCash);
-    //checkBtns("\t checkGameStatus");
+    this.checkGameStatus(model.playerBet);
     this.displayHands();
-    //checkBtns("\t displayHands");
     this.displayScores();
-    //checkBtns("\t displayScores");
   },
 
   displayHands: function () {
@@ -137,7 +123,7 @@ const controller = {
     view.renderCard(card, "player-hand");
     model.playerScore = this.calculateHandScore(model.playerHand);
     this.displayScores();
-    this.checkGameStatus(model.playerCash);
+    this.checkGameStatus(model.playerBet);
   },
 
   dealerTurn: function () {
@@ -149,17 +135,20 @@ const controller = {
       model.dealerScore = this.calculateHandScore(model.dealerHand);
       this.displayScores();
       checkCash("dealerTurn dealerScore < 17");
-      this.checkGameStatus(model.playerCash);
+      this.checkGameStatus(0); // Dealer is still playing so no bets won/lost
     }
 
     if (model.dealerScore > 21) {
       view.displayMessage("Dealer busts! You win.");
+      this.checkGameStatus(model.playerBet);
     } else if (model.dealerScore >= 17 && model.dealerScore <= 21) {
-      checkCash("dealerTurn dealerScore > 21");
-      this.checkGameStatus(model.playerCash);
+      view.displayMessage("Dealer stands over 17.");
+      checkCash("dealerTurn dealerScore >= 17 but <= 21");
+      this.checkGameStatus(model.playerBet);
     } else if (model.dealerScore === 17) {
+      view.displayMessage("Dealer stands on 17.");
       checkCash("dealerTurn dealerScore === 17");
-      this.checkGameStatus(model.playerCash);
+      this.checkGameStatus(model.playerBet);
     }
   },
 
@@ -169,8 +158,8 @@ const controller = {
   },
 
   calculatePayout: function (amount) {
+    console.log(`////// player cash: ${model.playerCash} += amount: ${amount}`)
     model.playerCash += amount;
-    // model.playerBet = 0;
   },
 
   checkGameStatus: function (amount) {
@@ -220,6 +209,9 @@ const controller = {
         }
       }
     }
+
+    this.displayScores();
+
   },
 };
 
