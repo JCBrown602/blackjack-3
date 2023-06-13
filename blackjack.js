@@ -79,7 +79,7 @@ const controller = {
 
     view.clearTable();
     //checkBtns("\t clearTable");
-    this.checkGameStatus(model.playerCash);
+    this.checkGameStatus(model.playerBet);
     //checkBtns("\t checkGameStatus");
     this.displayHands();
     //checkBtns("\t displayHands");
@@ -137,7 +137,7 @@ const controller = {
     view.renderCard(card, "player-hand");
     model.playerScore = this.calculateHandScore(model.playerHand);
     this.displayScores();
-    this.checkGameStatus(model.playerCash);
+    this.checkGameStatus(model.playerBet);
   },
 
   dealerTurn: function () {
@@ -149,17 +149,18 @@ const controller = {
       model.dealerScore = this.calculateHandScore(model.dealerHand);
       this.displayScores();
       checkCash("dealerTurn dealerScore < 17");
-      this.checkGameStatus(model.playerCash);
+      this.checkGameStatus(model.playerBet);
     }
 
     if (model.dealerScore > 21) {
       view.displayMessage("Dealer busts! You win.");
+      this.calculatePayout(model.playerBet * 2); // Player wins double the bet amount
     } else if (model.dealerScore >= 17 && model.dealerScore <= 21) {
-      checkCash("dealerTurn dealerScore > 21");
-      this.checkGameStatus(model.playerCash);
+      checkCash("dealerTurn dealerScore >= 17 but <= 21");
+      this.checkGameStatus(model.playerBet);
     } else if (model.dealerScore === 17) {
       checkCash("dealerTurn dealerScore === 17");
-      this.checkGameStatus(model.playerCash);
+      this.checkGameStatus(model.playerBet);
     }
   },
 
@@ -169,6 +170,7 @@ const controller = {
   },
 
   calculatePayout: function (amount) {
+    console.log(`////// player cash: ${model.playerCash} += amount: ${amount}`)
     model.playerCash += amount;
     // model.playerBet = 0;
   },
